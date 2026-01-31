@@ -9,62 +9,83 @@
 </head>
 <body>
 
-    <div class="glass-card">
-        <div class="display-screen">
-            <div id="display">0</div>
-            <div id="live-preview"></div>
+    <div class="app-container">
+        <div class="glass-card">
+            <!-- New Header -->
+            <div class="calculator-header">
+                <span class="brand-title">PrismCalc</span>
+                <button class="btn-icon" id="toggle-code" aria-label="Toggle Code Mode">
+                    <i class="ri-code-s-slash-line"></i>
+                </button>
+            </div>
+
+            <div class="display-screen">
+                <div id="display">0</div>
+                <div id="live-preview"></div>
+            </div>
+
+            <div class="calc-grid">
+                <!-- Row 1: Scientific & Clear -->
+                <button class="btn btn-scientific" data-action="input" data-value="sin(">sin</button>
+                <button class="btn btn-scientific" data-action="input" data-value="cos(">cos</button>
+                <button class="btn btn-scientific" data-action="input" data-value="tan(">tan</button>
+                <button class="btn btn-clear" data-action="clear" data-value="AC">AC</button>
+
+                <!-- Row 2: Scientific & Delete -->
+                <button class="btn btn-scientific" data-action="input" data-value="log(">log</button>
+                <button class="btn btn-scientific" data-action="input" data-value="ln(">ln</button>
+                <button class="btn btn-scientific" data-action="input" data-value="^">^</button>
+                <button class="btn btn-delete" data-action="delete" data-value="DEL"><i class="ri-delete-back-2-line"></i></button>
+
+                <!-- Row 3: Scientific & Divide -->
+                <button class="btn btn-scientific" data-action="input" data-value="√(">√</button>
+                <button class="btn btn-scientific" data-action="input" data-value="(">(</button>
+                <button class="btn btn-scientific" data-action="input" data-value=")">)</button>
+                <button class="btn btn-operator" data-action="input" data-value="÷">÷</button>
+
+                <!-- Row 4: 7-9 & Multiply -->
+                <button class="btn" data-action="input" data-value="7">7</button>
+                <button class="btn" data-action="input" data-value="8">8</button>
+                <button class="btn" data-action="input" data-value="9">9</button>
+                <button class="btn btn-operator" data-action="input" data-value="×">×</button>
+
+                <!-- Row 5: 4-6 & Subtract -->
+                <button class="btn" data-action="input" data-value="4">4</button>
+                <button class="btn" data-action="input" data-value="5">5</button>
+                <button class="btn" data-action="input" data-value="6">6</button>
+                <button class="btn btn-operator" data-action="input" data-value="-">-</button>
+
+                <!-- Row 6: 1-3 & Add -->
+                <button class="btn" data-action="input" data-value="1">1</button>
+                <button class="btn" data-action="input" data-value="2">2</button>
+                <button class="btn" data-action="input" data-value="3">3</button>
+                <button class="btn btn-operator" data-action="input" data-value="+">+</button>
+
+                <!-- Row 7: Constants & Zero -->
+                <button class="btn btn-scientific" data-action="input" data-value="π">π</button>
+                <button class="btn btn-scientific" data-action="input" data-value="e">e</button>
+                <button class="btn" data-action="input" data-value="0">0</button>
+                <button class="btn" data-action="input" data-value=".">.</button>
+
+                <!-- Row 8: Equals -->
+                <button class="btn btn-equals" data-action="calculate" data-value="=">=</button>
+            </div>
+
+            <a href="vault.html" class="nav-link">
+                <i class="ri-safe-2-line"></i> Enter The Vault
+            </a>
         </div>
 
-        <div class="calc-grid">
-            <!-- Row 1: Scientific & Clear -->
-            <button class="btn btn-scientific" data-action="input" data-value="sin(">sin</button>
-            <button class="btn btn-scientific" data-action="input" data-value="cos(">cos</button>
-            <button class="btn btn-scientific" data-action="input" data-value="tan(">tan</button>
-            <button class="btn btn-clear" data-action="clear" data-value="AC">AC</button>
-
-            <!-- Row 2: Scientific & Delete -->
-            <button class="btn btn-scientific" data-action="input" data-value="log(">log</button>
-            <button class="btn btn-scientific" data-action="input" data-value="ln(">ln</button>
-            <button class="btn btn-scientific" data-action="input" data-value="^">^</button>
-            <button class="btn btn-delete" data-action="delete" data-value="DEL"><i class="ri-delete-back-2-line"></i></button>
-
-            <!-- Row 3: Scientific & Divide -->
-            <button class="btn btn-scientific" data-action="input" data-value="√(">√</button>
-            <button class="btn btn-scientific" data-action="input" data-value="(">(</button>
-            <button class="btn btn-scientific" data-action="input" data-value=")">)</button>
-            <button class="btn btn-operator" data-action="input" data-value="÷">÷</button>
-
-            <!-- Row 4: 7-9 & Multiply -->
-            <button class="btn" data-action="input" data-value="7">7</button>
-            <button class="btn" data-action="input" data-value="8">8</button>
-            <button class="btn" data-action="input" data-value="9">9</button>
-            <button class="btn btn-operator" data-action="input" data-value="×">×</button>
-
-            <!-- Row 5: 4-6 & Subtract -->
-            <button class="btn" data-action="input" data-value="4">4</button>
-            <button class="btn" data-action="input" data-value="5">5</button>
-            <button class="btn" data-action="input" data-value="6">6</button>
-            <button class="btn btn-operator" data-action="input" data-value="-">-</button>
-
-            <!-- Row 6: 1-3 & Add -->
-            <button class="btn" data-action="input" data-value="1">1</button>
-            <button class="btn" data-action="input" data-value="2">2</button>
-            <button class="btn" data-action="input" data-value="3">3</button>
-            <button class="btn btn-operator" data-action="input" data-value="+">+</button>
-
-            <!-- Row 7: Constants & Zero -->
-            <button class="btn btn-scientific" data-action="input" data-value="π">π</button>
-            <button class="btn btn-scientific" data-action="input" data-value="e">e</button>
-            <button class="btn" data-action="input" data-value="0">0</button>
-            <button class="btn" data-action="input" data-value=".">.</button>
-
-            <!-- Row 8: Equals -->
-            <button class="btn btn-equals" data-action="calculate" data-value="=">=</button>
+        <!-- New Code Panel -->
+        <div id="code-panel" class="code-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <i class="ri-code-s-slash-line"></i> JS Console
+                </div>
+                <div class="panel-status">Live Translation</div>
+            </div>
+            <pre><code id="code-output">// Ready for input...</code></pre>
         </div>
-
-        <a href="vault.html" class="nav-link">
-            <i class="ri-safe-2-line"></i> Enter The Vault
-        </a>
     </div>
 
     <script src="script.js"></script>

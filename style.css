@@ -10,6 +10,15 @@
   --accent-glow: #00f260; /* Neon Green/Cyan for equals/action */
   --accent-secondary: #0575E6; /* Deep Blue for operators */
   --font-main: 'JetBrains Mono', monospace;
+
+  /* Code Mode Theme */
+  --code-bg: rgba(30, 30, 30, 0.95);
+  --syntax-keyword: #ff9f43; /* Orange */
+  --syntax-var: #54a0ff; /* Blue */
+  --syntax-number: #00d2d3; /* Cyan */
+  --syntax-comment: #1dd1a1; /* Green */
+  --syntax-operator: #ff6b6b; /* Pink/Red */
+  --syntax-object: #feca57; /* Yellow */
 }
 
 * {
@@ -30,6 +39,16 @@ body {
   padding: 20px;
 }
 
+/* App Container */
+.app-container {
+  width: 100%;
+  max-width: 400px; /* Default calculator width */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition: all 0.3s ease;
+}
+
 /* Glassmorphism Card */
 .glass-card {
   background: var(--glass-bg);
@@ -39,11 +58,48 @@ body {
   border-radius: 16px;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
   width: 100%;
-  max-width: 400px;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+/* Calculator Header */
+.calculator-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.brand-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.btn-icon {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+}
+
+.btn-icon:hover, .btn-icon.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--accent-glow);
+  border-color: var(--accent-glow);
+  box-shadow: 0 0 10px rgba(0, 242, 96, 0.2);
 }
 
 /* Display Screen */
@@ -154,6 +210,71 @@ body {
   text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
 }
 
+/* Code Panel (Mobile First: Bottom Sheet style) */
+.code-panel {
+  background: var(--code-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 20px;
+  width: 100%;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.code-panel.visible {
+  max-height: 400px;
+  opacity: 1;
+  margin-top: 10px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.7);
+  overflow-y: auto;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+  margin-bottom: 5px;
+}
+
+.panel-title {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.panel-status {
+  font-size: 0.7rem;
+  color: var(--accent-glow);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#code-output {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #dcdcdc;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Syntax Highlighting */
+.token-keyword { color: var(--syntax-keyword); font-weight: bold; }
+.token-var { color: var(--syntax-var); }
+.token-number { color: var(--syntax-number); }
+.token-comment { color: var(--syntax-comment); font-style: italic; }
+.token-operator { color: var(--syntax-operator); }
+.token-object { color: var(--syntax-object); }
+
 /* Vault Page Specifics */
 .vault-header {
   text-align: center;
@@ -180,7 +301,7 @@ body {
   padding-right: 5px;
 }
 
-/* Scrollbar styling for glass effect */
+/* Scrollbar styling */
 .history-list::-webkit-scrollbar {
   width: 6px;
 }
@@ -235,24 +356,6 @@ body {
   color: var(--accent-secondary);
 }
 
-/* Responsive adjustments */
-@media (max-width: 450px) {
-  body {
-    padding: 10px;
-    align-items: flex-start;
-  }
-
-  .glass-card {
-    height: auto;
-    min-height: calc(100vh - 20px);
-    justify-content: center;
-  }
-
-  .btn {
-    min-height: 55px; /* Larger touch target */
-  }
-}
-
 /* Clear History Button */
 .btn-clear-history {
   background: rgba(255, 107, 107, 0.1);
@@ -303,4 +406,45 @@ body {
   font-size: 0.75rem;
   color: var(--text-secondary);
   opacity: 0.7;
+}
+
+/* Desktop Responsive Layout (Split Screen) */
+@media (min-width: 768px) {
+  .app-container.code-active {
+    max-width: 900px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .app-container.code-active .code-panel.visible {
+    height: 100%;
+    max-height: 100%; /* Override mobile max-height */
+    margin-top: 0;
+    /* Ensure it fills the height of the grid if needed, or matches calc */
+    min-height: 500px; /* Approximate height of calculator */
+  }
+}
+
+@media (max-width: 450px) {
+  body {
+    padding: 10px;
+    align-items: flex-start;
+  }
+
+  .glass-card {
+    height: auto;
+    min-height: calc(100vh - 20px);
+    justify-content: center;
+  }
+
+  /* When code mode is active, don't force full height on card so panel can show */
+  .app-container.code-active .glass-card {
+      min-height: auto;
+  }
+
+  .btn {
+    min-height: 55px; /* Larger touch target */
+  }
 }
