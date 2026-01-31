@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const historyItem = {
                 equation: eqn,
                 result: res,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toLocaleString()
             };
 
             let history = JSON.parse(localStorage.getItem('prismCalcHistory')) || [];
@@ -157,7 +157,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadHistory() {
-        const history = JSON.parse(localStorage.getItem('prismCalcHistory')) || [];
+        let history = JSON.parse(localStorage.getItem('prismCalcHistory')) || [];
+
+        // Migration Check: If legacy strings exist, clear history
+        if (history.some(item => typeof item === 'string')) {
+            localStorage.removeItem('prismCalcHistory');
+            history = [];
+        }
 
         historyListElement.innerHTML = '';
 
@@ -181,8 +187,13 @@ document.addEventListener('DOMContentLoaded', () => {
             resDiv.className = 'history-result';
             resDiv.innerText = '= ' + item.result;
 
+            const timeTag = document.createElement('small');
+            timeTag.className = 'time-tag';
+            timeTag.innerText = item.timestamp || '';
+
             li.appendChild(eqnDiv);
             li.appendChild(resDiv);
+            li.appendChild(timeTag);
 
             // Add restore click listener
             li.addEventListener('click', () => {

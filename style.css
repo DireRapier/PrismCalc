@@ -296,3 +296,11 @@ body {
   transform: scale(1.02);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
+
+/* Timestamp Tag */
+.time-tag {
+  align-self: flex-end;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
