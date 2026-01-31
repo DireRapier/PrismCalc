@@ -10,9 +10,139 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleCodeBtn = document.getElementById('toggle-code');
     let isCodeMode = false;
 
+    // --- Audio Engine ---
+    const AudioEngine = {
+        ctx: null,
+        isMuted: false,
+
+        init() {
+            if (!this.ctx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext();
+            }
+            if (this.ctx.state === 'suspended') {
+                this.ctx.resume();
+            }
+        },
+
+        toggleMute() {
+            this.isMuted = !this.isMuted;
+            const btn = document.getElementById('toggle-sound');
+            if (btn) {
+                const icon = btn.querySelector('i');
+                if (this.isMuted) {
+                    icon.className = 'ri-volume-mute-line';
+                    btn.classList.add('active'); // Optional visual cue
+                } else {
+                    icon.className = 'ri-volume-up-line';
+                    btn.classList.remove('active');
+                }
+            }
+        },
+
+        playTone(freq, type, duration, volStart = 0.1, volEnd = 0.01) {
+            if (this.isMuted || !this.ctx) return;
+
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+
+            gain.gain.setValueAtTime(volStart, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(volEnd, this.ctx.currentTime + duration);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+            return osc; // Return for further manipulation if needed
+        },
+
+        click() {
+            // "Thock": Triangle wave, 150Hz -> 50Hz
+            if (this.isMuted || !this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 0.1);
+
+            gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.1);
+        },
+
+        delete() {
+            // "Glitch": Sawtooth, 800Hz -> 100Hz
+            if (this.isMuted || !this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.1);
+
+            gain.gain.setValueAtTime(0.05, this.ctx.currentTime); // Slightly quieter
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.1);
+        },
+
+        calculate() {
+            // "Success": Major Chord (C5 + E5)
+            if (this.isMuted || !this.ctx) return;
+
+            const duration = 0.5;
+            const freqs = [523.25, 659.25]; // C5, E5
+
+            freqs.forEach(f => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.value = f;
+
+                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            });
+        }
+    };
+
+    // Toggle Sound
+    const toggleSoundBtn = document.getElementById('toggle-sound');
+    if (toggleSoundBtn) {
+        // Set initial icon state (unmuted by default logic)
+        toggleSoundBtn.querySelector('i').className = 'ri-volume-up-line';
+
+        toggleSoundBtn.addEventListener('click', () => {
+            AudioEngine.init(); // Ensure context is ready
+            AudioEngine.toggleMute();
+        });
+    }
+
     // Toggle Code Mode
     if (toggleCodeBtn) {
         toggleCodeBtn.addEventListener('click', () => {
+            AudioEngine.init();
+            AudioEngine.click();
             isCodeMode = !isCodeMode;
 
             if (isCodeMode) {
@@ -56,6 +186,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         function handleInput(action, value) {
+            // Audio Hooks
+            AudioEngine.init();
+            if (action === 'calculate') {
+                AudioEngine.calculate();
+            } else if (action === 'clear' || action === 'delete') {
+                AudioEngine.delete();
+            } else {
+                AudioEngine.click();
+            }
+
             if (action === 'clear') {
                 currentExpression = '';
                 updateDisplay('0');
@@ -89,6 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .replace(/×/g, '*')
                 .replace(/÷/g, '/')
                 .replace(/\^/g, '**')
+                .replace(/√/g, 'sqrt')
                 .replace(/π/g, 'Math.PI')
                 .replace(/e/g, 'Math.E');
 
