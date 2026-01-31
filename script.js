@@ -3,6 +3,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const livePreviewElement = document.getElementById('live-preview');
     const historyListElement = document.getElementById('history-list');
 
+    // Code Mode Elements
+    const appContainer = document.querySelector('.app-container');
+    const codePanel = document.getElementById('code-panel');
+    const codeOutput = document.getElementById('code-output');
+    const toggleCodeBtn = document.getElementById('toggle-code');
+    let isCodeMode = false;
+
+    // Toggle Code Mode
+    if (toggleCodeBtn) {
+        toggleCodeBtn.addEventListener('click', () => {
+            isCodeMode = !isCodeMode;
+
+            if (isCodeMode) {
+                appContainer.classList.add('code-active');
+                codePanel.classList.add('visible');
+                toggleCodeBtn.classList.add('active');
+            } else {
+                appContainer.classList.remove('code-active');
+                codePanel.classList.remove('visible');
+                toggleCodeBtn.classList.remove('active');
+            }
+        });
+    }
+
     // Calculator Logic (index.html)
     if (displayElement) {
         let currentExpression = '';
@@ -15,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 updateDisplay(currentExpression);
                 updatePreview();
+                updateCodePanel(currentExpression);
                 localStorage.removeItem('calc_pending_restore');
             }, 0);
         }
@@ -49,6 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateDisplay(currentExpression);
                 updatePreview();
             }
+            // Update Code Panel in real-time
+            updateCodePanel(currentExpression);
         }
 
         function updateDisplay(text) {
@@ -57,23 +84,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function evaluateExpression(expression) {
             // Sanitize and prepare expression for evaluation
+            // We define local helper functions for the calculation to enforce Degree mode
             let evalString = expression
                 .replace(/×/g, '*')
                 .replace(/÷/g, '/')
                 .replace(/\^/g, '**')
-                .replace(/√/g, 'Math.sqrt')
-                .replace(/sin/g, 'Math.sin')
-                .replace(/cos/g, 'Math.cos')
-                .replace(/tan/g, 'Math.tan')
-                .replace(/log/g, 'Math.log10')
-                .replace(/ln/g, 'Math.log')
                 .replace(/π/g, 'Math.PI')
                 .replace(/e/g, 'Math.E');
 
             // Handle implicitly multiplied parentheses e.g. 5(2) -> 5*(2)
             evalString = evalString.replace(/(\d)\(/g, '$1*(');
 
-            const result = new Function('return ' + evalString)();
+            // Construct function with Degree mode helpers
+            // Note: sin/cos/tan in the input string will call these local functions
+            const funcBody = `
+                const sin = (d) => Math.sin(d * Math.PI / 180);
+                const cos = (d) => Math.cos(d * Math.PI / 180);
+                const tan = (d) => Math.tan(d * Math.PI / 180);
+                const log = Math.log10;
+                const ln = Math.log;
+                const sqrt = Math.sqrt;
+                return ${evalString};
+            `;
+
+            const result = new Function(funcBody)();
 
             if (!isFinite(result) || isNaN(result)) {
                 throw new Error('Invalid Result');
@@ -102,10 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = evaluateExpression(currentExpression);
                 livePreviewElement.innerText = result;
             } catch (error) {
-                // Incomplete or invalid expression while typing
-                // Keep the previous preview or clear it.
-                // We choose to clear it to indicate incomplete state.
-                // Do not show "Error" here.
                 livePreviewElement.innerText = '';
             }
         }
@@ -118,12 +148,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 currentExpression = result;
                 updateDisplay(currentExpression);
-                updatePreview(''); // Clear preview as result is now in main display
+                updatePreview('');
+                updateCodePanel(currentExpression); // Update code panel with result
 
             } catch (error) {
                 updateDisplay('Error');
                 currentExpression = '';
                 updatePreview('');
+                updateCodePanel('Error');
             }
         }
 
@@ -134,12 +166,77 @@ document.addEventListener('DOMContentLoaded', () => {
                 timestamp: new Date().toLocaleString()
             };
 
-            let history = JSON.parse(localStorage.getItem('prismCalcHistory')) || [];
+            let history = JSON.parse(localStorage.getItem('calc_history')) || [];
             history.unshift(historyItem); // Add to beginning
             // Limit history to 50 items
             if (history.length > 50) history.pop();
 
-            localStorage.setItem('prismCalcHistory', JSON.stringify(history));
+            localStorage.setItem('calc_history', JSON.stringify(history));
+        }
+
+        // --- Code Mode Logic ---
+        function updateCodePanel(expression) {
+            if (!codeOutput) return;
+            if (!expression || expression === 'Error') {
+                codeOutput.innerHTML = '<span class="token-comment">// Ready for input...</span>';
+                return;
+            }
+
+            // Generate JS Code
+            const jsCode = generateJS(expression);
+
+            // Calculate result for the comment
+            let resultComment = '';
+            try {
+                const res = evaluateExpression(expression);
+                resultComment = ` // ${res}`;
+            } catch (e) {
+                // If incomplete, don't show result
+            }
+
+            const finalString = `const result = ${jsCode};${resultComment}`;
+
+            // Highlight Syntax
+            codeOutput.innerHTML = highlightSyntax(finalString);
+        }
+
+        function generateJS(expression) {
+            let code = expression
+                .replace(/×/g, '*')
+                .replace(/÷/g, '/')
+                .replace(/\^/g, '**')
+                .replace(/π/g, 'Math.PI')
+                .replace(/e/g, 'Math.E')
+                .replace(/sin/g, 'Math.sin')
+                .replace(/cos/g, 'Math.cos')
+                .replace(/tan/g, 'Math.tan')
+                .replace(/√/g, 'Math.sqrt')
+                .replace(/log/g, 'Math.log10')
+                .replace(/ln/g, 'Math.log');
+
+            // Educational Trig Replacement (Degree to Radian visual)
+            // Matches Math.sin(simple_number_or_expression)
+            // The Regex [^()]+ ensures we only match the innermost simple calls
+            // e.g. Math.sin(30) -> Math.sin((30) * Math.PI / 180)
+            code = code.replace(/Math\.sin\(([^()]+)\)/g, 'Math.sin(($1) * Math.PI / 180)');
+            code = code.replace(/Math\.cos\(([^()]+)\)/g, 'Math.cos(($1) * Math.PI / 180)');
+            code = code.replace(/Math\.tan\(([^()]+)\)/g, 'Math.tan(($1) * Math.PI / 180)');
+
+            return code;
+        }
+
+        function highlightSyntax(code) {
+            // Safer syntax highlighter using a single pass to prevent breaking HTML tags
+            const regex = /(\/\/.*$)|(const|let|var|function|return)|(Math)|(\b\d+(\.\d+)?\b)|([+\-*/=])/gm;
+
+            return code.replace(regex, (match, comment, keyword, object, number, decimal, operator) => {
+                if (comment) return `<span class="token-comment">${match}</span>`;
+                if (keyword) return `<span class="token-keyword">${match}</span>`;
+                if (object) return `<span class="token-object">${match}</span>`;
+                if (number) return `<span class="token-number">${match}</span>`;
+                if (operator) return `<span class="token-operator">${match}</span>`;
+                return match;
+            });
         }
     }
 
@@ -150,18 +247,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const clearBtn = document.getElementById('clear-history');
         if (clearBtn) {
             clearBtn.addEventListener('click', () => {
-                localStorage.removeItem('prismCalcHistory');
+                localStorage.removeItem('calc_history');
                 loadHistory();
             });
         }
     }
 
     function loadHistory() {
-        let history = JSON.parse(localStorage.getItem('prismCalcHistory')) || [];
+        let history = JSON.parse(localStorage.getItem('calc_history')) || [];
 
         // Migration Check: If legacy strings exist, clear history
         if (history.some(item => typeof item === 'string')) {
-            localStorage.removeItem('prismCalcHistory');
+            localStorage.removeItem('calc_history');
             history = [];
         }
 
@@ -177,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         history.forEach(item => {
             const li = document.createElement('li');
-            li.className = 'history-item history-card'; // Added history-card class
+            li.className = 'history-item history-card';
 
             const eqnDiv = document.createElement('div');
             eqnDiv.className = 'history-equation';
@@ -195,7 +292,6 @@ document.addEventListener('DOMContentLoaded', () => {
             li.appendChild(resDiv);
             li.appendChild(timeTag);
 
-            // Add restore click listener
             li.addEventListener('click', () => {
                 localStorage.setItem('calc_pending_restore', item.equation);
                 window.location.href = 'index.html';
