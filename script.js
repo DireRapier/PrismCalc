@@ -379,6 +379,67 @@ document.addEventListener('DOMContentLoaded', () => {
                 return match;
             });
         }
+
+        // --- Keyboard Support ---
+        document.addEventListener('keydown', (e) => {
+            if (!displayElement) return; // Only valid on calculator page
+
+            const key = e.key;
+
+            // Safety: Prevent default browser find / form submit
+            if (key === '/' || key === 'Enter') {
+                e.preventDefault();
+            }
+
+            // Map keys to buttons
+            let selector = null;
+
+            if (key >= '0' && key <= '9') {
+                selector = `button[data-value="${key}"]`;
+            } else if (key === '.') {
+                selector = `button[data-value="."]`;
+            } else if (key === '+') {
+                selector = `button[data-value="+"]`;
+            } else if (key === '-') {
+                selector = `button[data-value="-"]`;
+            } else if (key === '*') {
+                selector = `button[data-value="×"]`;
+            } else if (key === '/') {
+                selector = `button[data-value="÷"]`;
+            } else if (key === 'Enter' || key === '=') {
+                selector = `button[data-action="calculate"]`;
+            } else if (key === 'Backspace') {
+                selector = `button[data-action="delete"]`;
+            } else if (key === 'Escape') {
+                selector = `button[data-action="clear"]`;
+            } else if (key === '^') {
+                selector = `button[data-value="^"]`;
+            } else if (key === '(') {
+                selector = `button[data-value="("]`;
+            } else if (key === ')') {
+                selector = `button[data-value=")"]`;
+            } else if (key.toLowerCase() === 's') {
+                 // rough mapping for shortcuts like 's' for sin?
+                 // Request didn't strictly ask for complex mappings like 'sin', just numbers/operators.
+                 // We will stick to the requested list.
+            }
+
+            if (selector) {
+                const btn = document.querySelector(selector);
+                if (btn) {
+                    // Trigger Logic
+                    const action = btn.dataset.action;
+                    const value = btn.dataset.value;
+                    handleInput(action, value);
+
+                    // Visual Feedback
+                    btn.classList.add('active');
+                    setTimeout(() => {
+                        btn.classList.remove('active');
+                    }, 150); // Short flash
+                }
+            }
+        });
     }
 
     // Vault Logic (vault.html)
