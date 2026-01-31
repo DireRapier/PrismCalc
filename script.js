@@ -453,6 +453,46 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadHistory();
             });
         }
+
+        const exportBtn = document.getElementById('export-history');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', exportHistoryToCSV);
+        }
+    }
+
+    function exportHistoryToCSV() {
+        let history = JSON.parse(localStorage.getItem('calc_history')) || [];
+
+        if (history.length === 0) {
+            alert('No history to export!');
+            return;
+        }
+
+        // CSV Header
+        let csvContent = '"Timestamp","Equation","Result"\n';
+
+        // CSV Rows
+        history.forEach(item => {
+            // Escape double quotes if necessary, though our simplified data usually doesn't have them
+            const t = item.timestamp ? item.timestamp.replace(/"/g, '""') : '';
+            const e = item.equation ? item.equation.replace(/"/g, '""') : '';
+            const r = item.result ? item.result.replace(/"/g, '""') : '';
+
+            csvContent += `"${t}","${e}","${r}"\n`;
+        });
+
+        // Create Blob and Download Link
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'prism_calc_export.csv');
+        link.style.visibility = 'hidden';
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     function loadHistory() {
