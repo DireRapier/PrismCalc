@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const displayElement = document.getElementById('display');
-    const historyPreviewElement = document.getElementById('history-preview');
+    const livePreviewElement = document.getElementById('live-preview');
     const historyListElement = document.getElementById('history-list');
 
     // Calculator Logic (index.html)
@@ -25,17 +25,16 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (action === 'delete') {
                 currentExpression = currentExpression.toString().slice(0, -1);
                 updateDisplay(currentExpression || '0');
+                updatePreview();
             } else if (action === 'calculate') {
                 calculate();
             } else {
                 // Append value
                 if (currentExpression === 'Error') currentExpression = '';
 
-                // Handle specific function replacements for display if needed,
-                // but strictly keeping simple concatenation for now.
-                // We will rely on data-value providing the correct char.
                 currentExpression += value;
                 updateDisplay(currentExpression);
+                updatePreview();
             }
         }
 
@@ -43,54 +42,75 @@ document.addEventListener('DOMContentLoaded', () => {
             displayElement.innerText = text;
         }
 
-        function updatePreview(text) {
-            if (historyPreviewElement) {
-                historyPreviewElement.innerText = text;
+        function evaluateExpression(expression) {
+            // Sanitize and prepare expression for evaluation
+            let evalString = expression
+                .replace(/×/g, '*')
+                .replace(/÷/g, '/')
+                .replace(/\^/g, '**')
+                .replace(/√/g, 'Math.sqrt')
+                .replace(/sin/g, 'Math.sin')
+                .replace(/cos/g, 'Math.cos')
+                .replace(/tan/g, 'Math.tan')
+                .replace(/log/g, 'Math.log10')
+                .replace(/ln/g, 'Math.log')
+                .replace(/π/g, 'Math.PI')
+                .replace(/e/g, 'Math.E');
+
+            // Handle implicitly multiplied parentheses e.g. 5(2) -> 5*(2)
+            evalString = evalString.replace(/(\d)\(/g, '$1*(');
+
+            const result = new Function('return ' + evalString)();
+
+            if (!isFinite(result) || isNaN(result)) {
+                throw new Error('Invalid Result');
+            }
+
+            return parseFloat(result.toFixed(10)).toString();
+        }
+
+        function updatePreview(textOverride) {
+            if (!livePreviewElement) return;
+
+            // If override provided (like clearing), use it
+            if (typeof textOverride === 'string') {
+                livePreviewElement.innerText = textOverride;
+                return;
+            }
+
+            // If empty, clear preview
+            if (!currentExpression) {
+                 livePreviewElement.innerText = '';
+                 return;
+            }
+
+            try {
+                // Attempt to evaluate
+                const result = evaluateExpression(currentExpression);
+                livePreviewElement.innerText = result;
+            } catch (error) {
+                // Incomplete or invalid expression while typing
+                // Keep the previous preview or clear it.
+                // We choose to clear it to indicate incomplete state.
+                // Do not show "Error" here.
+                livePreviewElement.innerText = '';
             }
         }
 
         function calculate() {
             try {
-                // Sanitize and prepare expression for evaluation
-                // Replace visual symbols with JS math functions
-                let evalString = currentExpression
-                    .replace(/×/g, '*')
-                    .replace(/÷/g, '/')
-                    .replace(/\^/g, '**')
-                    .replace(/√/g, 'Math.sqrt')
-                    .replace(/sin/g, 'Math.sin')
-                    .replace(/cos/g, 'Math.cos')
-                    .replace(/tan/g, 'Math.tan')
-                    .replace(/log/g, 'Math.log10') // Standard log usually implies base 10 on calc, Math.log is ln
-                    .replace(/ln/g, 'Math.log')
-                    .replace(/π/g, 'Math.PI')
-                    .replace(/e/g, 'Math.E');
+                const result = evaluateExpression(currentExpression);
 
-                // Handle implicitly multiplied parentheses e.g. 5(2) -> 5*(2)
-                // This is a simple regex attempt, might not cover all edge cases but adds polish
-                evalString = evalString.replace(/(\d)\(/g, '$1*(');
+                saveToHistory(currentExpression, result);
 
-                // Safe evaluation
-                // Using Function constructor is slightly safer than eval for scope isolation
-                const result = new Function('return ' + evalString)();
-
-                // Check for Infinity or NaN
-                if (!isFinite(result) || isNaN(result)) {
-                    throw new Error('Invalid Result');
-                }
-
-                // Format result (max decimal places)
-                const formattedResult = parseFloat(result.toFixed(10)).toString();
-
-                saveToHistory(currentExpression, formattedResult);
-
-                updatePreview(currentExpression + ' =');
-                currentExpression = formattedResult;
+                currentExpression = result;
                 updateDisplay(currentExpression);
+                updatePreview(''); // Clear preview as result is now in main display
 
             } catch (error) {
                 updateDisplay('Error');
                 currentExpression = '';
+                updatePreview('');
             }
         }
 

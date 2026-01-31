@@ -63,11 +63,12 @@ body {
   white-space: nowrap;
 }
 
-.history-preview {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin-bottom: 5px;
+#live-preview {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 5px;
   min-height: 1.2em;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
 }
 
 /* Calculator Grid */
