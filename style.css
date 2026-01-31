@@ -252,3 +252,47 @@ body {
     min-height: 55px; /* Larger touch target */
   }
 }
+
+/* Clear History Button */
+.btn-clear-history {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid #ff6b6b;
+  color: #ff6b6b;
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(255, 107, 107, 0.1);
+}
+
+.btn-clear-history:hover {
+  background: rgba(255, 107, 107, 0.2);
+  box-shadow: 0 0 15px rgba(255, 107, 107, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-clear-history:active {
+  transform: translateY(1px);
+}
+
+/* History Card (Interactive) */
+.history-card {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.history-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-glow);
+  transform: scale(1.02);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}

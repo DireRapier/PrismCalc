@@ -6,6 +6,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Calculator Logic (index.html)
     if (displayElement) {
         let currentExpression = '';
+
+        // Check for pending restore
+        const pendingRestore = localStorage.getItem('calc_pending_restore');
+        if (pendingRestore) {
+            currentExpression = pendingRestore;
+            // Use setTimeout to ensure functions are defined/hoisted and DOM is ready
+            setTimeout(() => {
+                updateDisplay(currentExpression);
+                updatePreview();
+                localStorage.removeItem('calc_pending_restore');
+            }, 0);
+        }
+
         const buttons = document.querySelectorAll('.btn');
 
         buttons.forEach(button => {
@@ -133,6 +146,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Vault Logic (vault.html)
     if (historyListElement) {
         loadHistory();
+
+        const clearBtn = document.getElementById('clear-history');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                localStorage.removeItem('prismCalcHistory');
+                loadHistory();
+            });
+        }
     }
 
     function loadHistory() {
@@ -150,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         history.forEach(item => {
             const li = document.createElement('li');
-            li.className = 'history-item';
+            li.className = 'history-item history-card'; // Added history-card class
 
             const eqnDiv = document.createElement('div');
             eqnDiv.className = 'history-equation';
@@ -162,6 +183,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             li.appendChild(eqnDiv);
             li.appendChild(resDiv);
+
+            // Add restore click listener
+            li.addEventListener('click', () => {
+                localStorage.setItem('calc_pending_restore', item.equation);
+                window.location.href = 'index.html';
+            });
+
             historyListElement.appendChild(li);
         });
     }
